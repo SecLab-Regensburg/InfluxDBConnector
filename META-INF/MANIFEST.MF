@@ -1,0 +1,18 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: InfluxDBConnector-Node extension for KNIME Workbench
+Bundle-SymbolicName: de.hsregensburg; singleton:=true
+Bundle-Version: 1.0.0
+Bundle-ClassPath: influxdbconnector.jar,
+ lib/influxdb-java-2.7.jar,
+ .,
+ lib/okhttp-3.8.1.jar
+Bundle-Activator: de.hsregensburg.InfluxDBConnectorNodePlugin
+Bundle-Vendor: pasiem
+Require-Bundle: org.eclipse.core.runtime,
+ org.knime.workbench.core,
+ org.knime.workbench.repository,
+ org.knime.base
+Bundle-ActivationPolicy: lazy
+Export-Package: de.hsregensburg
+
