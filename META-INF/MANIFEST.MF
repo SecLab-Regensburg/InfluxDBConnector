@@ -6,7 +6,12 @@ Bundle-Version: 1.0.0
 Bundle-ClassPath: influxdbconnector.jar,
  lib/influxdb-java-2.7.jar,
  .,
- lib/okhttp-3.8.1.jar
+ lib/okhttp-3.8.1.jar,
+ lib/converter-moshi-2.3.0.jar,
+ lib/logging-interceptor-3.8.1.jar,
+ lib/retrofit-2.3.0.jar,
+ lib/okio-1.13.0.jar,
+ lib/moshi-1.4.0.jar
 Bundle-Activator: de.hsregensburg.InfluxDBConnectorNodePlugin
 Bundle-Vendor: pasiem
 Require-Bundle: org.eclipse.core.runtime,

@@ -5,5 +5,10 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry exported="true" kind="lib" path="lib/influxdb-java-2.7.jar"/>
 	<classpathentry exported="true" kind="lib" path="lib/okhttp-3.8.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/converter-moshi-2.3.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/logging-interceptor-3.8.1.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/retrofit-2.3.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/okio-1.13.0.jar"/>
+	<classpathentry exported="true" kind="lib" path="lib/moshi-1.4.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

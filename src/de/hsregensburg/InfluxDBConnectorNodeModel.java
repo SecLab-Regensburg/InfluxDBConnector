@@ -18,10 +18,12 @@ package de.hsregensburg;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.List;
 
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Query;
+import org.influxdb.dto.QueryResult;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
@@ -110,24 +112,30 @@ public class InfluxDBConnectorNodeModel extends NodeModel {
     protected BufferedDataTable[] execute(final BufferedDataTable[] inData,
             final ExecutionContext exec) throws Exception {
 
-//    	InfluxDB db = InfluxDBFactory.connect(m_database_uri.getStringValue(), 
-//    										  m_database_username.getStringValue(),
-//    										  m_database_password.getStringValue());
-//    	db.query(new Query(m_database_query.getStringValue(), m_database_name.getStringValue()));
+    	InfluxDB db = InfluxDBFactory.connect(m_database_uri.getStringValue(), 
+    										  m_database_username.getStringValue(),
+    										  m_database_password.getStringValue());
+    	QueryResult result = db.query(new Query(m_database_query.getStringValue(), m_database_name.getStringValue()));
     	
         // TODO do something here
         logger.info("Node Model Stub... this is not yet implemented !");
 
+        List<String> columns = result.getResults().get(0).getSeries().get(0).getColumns();
+
+        DataColumnSpec[] allColSpecs = new DataColumnSpec[columns.size()];
         
+        for (int i = 0; i < columns.size(); i++) {
+        	allColSpecs[i] = new DataColumnSpecCreator(columns.get(i), StringCell.TYPE).createSpec();
+        }
         // the data table spec of the single output table, 
         // the table will have three columns:
-        DataColumnSpec[] allColSpecs = new DataColumnSpec[3];
-        allColSpecs[0] = 
-            new DataColumnSpecCreator("Column 0", StringCell.TYPE).createSpec();
-        allColSpecs[1] = 
-            new DataColumnSpecCreator("Column 1", DoubleCell.TYPE).createSpec();
-        allColSpecs[2] = 
-            new DataColumnSpecCreator("Column 2", IntCell.TYPE).createSpec();
+//        DataColumnSpec[] allColSpecs = new DataColumnSpec[3];
+//        allColSpecs[0] = 
+//            new DataColumnSpecCreator("Column 0", StringCell.TYPE).createSpec();
+//        allColSpecs[1] = 
+//            new DataColumnSpecCreator("Column 1", DoubleCell.TYPE).createSpec();
+//        allColSpecs[2] = 
+//            new DataColumnSpecCreator("Column 2", IntCell.TYPE).createSpec();
         DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
         // the execution context will provide us with storage capacity, in this
         // case a data container to which we will add rows sequentially
@@ -195,6 +203,7 @@ public class InfluxDBConnectorNodeModel extends NodeModel {
         m_database_name.saveSettingsTo(settings);
         m_database_username.saveSettingsTo(settings);
         m_database_password.saveSettingsTo(settings);
+        m_database_query.saveSettingsTo(settings);
     }
 
     /**
@@ -213,6 +222,7 @@ public class InfluxDBConnectorNodeModel extends NodeModel {
     	m_database_name.loadSettingsFrom(settings);
     	m_database_username.loadSettingsFrom(settings);
     	m_database_password.loadSettingsFrom(settings);
+    	m_database_query.loadSettingsFrom(settings);
     }
 
     /**
