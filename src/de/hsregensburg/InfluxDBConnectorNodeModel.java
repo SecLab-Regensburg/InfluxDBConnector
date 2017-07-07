@@ -18,21 +18,24 @@ package de.hsregensburg;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
 
 import org.influxdb.InfluxDB;
 import org.influxdb.InfluxDBFactory;
 import org.influxdb.dto.Query;
 import org.influxdb.dto.QueryResult;
+import org.influxdb.dto.QueryResult.Result;
+import org.influxdb.dto.QueryResult.Series;
 import org.knime.core.data.DataCell;
 import org.knime.core.data.DataColumnSpec;
 import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
+import org.knime.core.data.DataType;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
-import org.knime.core.data.def.IntCell;
 import org.knime.core.data.def.StringCell;
 import org.knime.core.node.BufferedDataContainer;
 import org.knime.core.node.BufferedDataTable;
@@ -115,20 +118,38 @@ public class InfluxDBConnectorNodeModel extends NodeModel {
     	InfluxDB db = InfluxDBFactory.connect(m_database_uri.getStringValue(), 
     										  m_database_username.getStringValue(),
     										  m_database_password.getStringValue());
-    	QueryResult result = db.query(new Query(m_database_query.getStringValue(), m_database_name.getStringValue()));
+    	QueryResult typedata = db.query(new Query("SHOW FIELD KEYS", m_database_name.getStringValue()));
+    	QueryResult results = db.query(new Query(m_database_query.getStringValue(), m_database_name.getStringValue()));
     	
-        // TODO do something here
-        logger.info("Node Model Stub... this is not yet implemented !");
-
-        List<String> columns = result.getResults().get(0).getSeries().get(0).getColumns();
-
-        DataColumnSpec[] allColSpecs = new DataColumnSpec[columns.size()];
-        
-        for (int i = 0; i < columns.size(); i++) {
-        	allColSpecs[i] = new DataColumnSpecCreator(columns.get(i), StringCell.TYPE).createSpec();
+    	DataColumnSpec[] allColSpecs = generateColumns(typedata);
+    	
+        if (results == null || results.getResults().size() > 1) {
+        	throw new Exception("There is more then one Resultset");
         }
+        
+        Result result = results.getResults().get(0);
+        
+        if (result == null || result.getSeries() == null || result.getSeries().size() > 1) {
+        	throw new Exception("There is more then one Series");
+        }
+        
+        Series series = result.getSeries().get(0);
+        List<String> columns = series.getColumns();
+
+        int size_columns = series.getColumns().size();
+        int size_rows = series.getValues().size();
+//
+//        DataColumnSpec[] allColSpecs = new DataColumnSpec[size_columns];
+//        
+//        List<Object> firstRow = series.getValues().get(0);
+//        for (int i = 0; i < size_columns; i++) {
+//        	DataType type = getDataTypeForObject(firstRow.get(i));
+//        	
+//        	allColSpecs[i] = new DataColumnSpecCreator(columns.get(i), type).createSpec();
+//        }
+        
         // the data table spec of the single output table, 
-        // the table will have three columns:
+//         the table will have three columns:
 //        DataColumnSpec[] allColSpecs = new DataColumnSpec[3];
 //        allColSpecs[0] = 
 //            new DataColumnSpecCreator("Column 0", StringCell.TYPE).createSpec();
@@ -143,28 +164,95 @@ public class InfluxDBConnectorNodeModel extends NodeModel {
         // will buffer to disc if necessary.
         BufferedDataContainer container = exec.createDataContainer(outputSpec);
         // let's add m_count rows to it
-        for (int i = 0; i < m_count.getIntValue(); i++) {
-            RowKey key = new RowKey("Row " + i);
-            // the cells of the current row, the types of the cells must match
-            // the column spec (see above)
-            DataCell[] cells = new DataCell[3];
-            cells[0] = new StringCell("String_" + i); 
-            cells[1] = new DoubleCell(0.5 * i); 
-            cells[2] = new IntCell(i);
-            DataRow row = new DefaultRow(key, cells);
-            container.addRowToTable(row);
-            
-            // check if the execution monitor was canceled
-            exec.checkCanceled();
-            exec.setProgress(i / (double)m_count.getIntValue(), 
-                "Adding row " + i);
+        
+        for (int i = 0; i < size_rows; i++) {
+        	RowKey key = new RowKey("Row " + i);
+        	
+        	DataCell[] cells = new DataCell[size_columns];
+        	List<Object> celldata = series.getValues().get(i);
+        	for (int j = 0; j < celldata.size(); j++) {
+        		Object data = celldata.get(j);
+        		
+        		cells[j] = getDataCellForObject(data);
+        	}
+        	DataRow row = new DefaultRow(key, cells);
+        	container.addRowToTable(row);
         }
+        
+//        for (int i = 0; i < m_count.getIntValue(); i++) {
+//            RowKey key = new RowKey("Row " + i);
+//            // the cells of the current row, the types of the cells must match
+//            // the column spec (see above)
+//            DataCell[] cells = new DataCell[3];
+//            cells[0] = new StringCell("String_" + i); 
+//            cells[1] = new DoubleCell(0.5 * i);     Series series = result.getSeries().get(0);
+        List<String> columns = series.getColumns();
+
+//            cells[2] = new IntCell(i);
+//            DataRow row = new DefaultRow(key, cells);
+//            container.addRowToTable(row);
+//            
+//            // check if the execution monitor was canceled
+//            exec.checkCanceled();
+//            exec.setProgress(i / (double)m_count.getIntValue(), 
+//                "Adding row " + i);
+//        }
         // once we are done, we close the container and return its table
         container.close();
         BufferedDataTable out = container.getTable();
         return new BufferedDataTable[]{out};
     }
+    
+    private HashMap<String, Integer> columnMap = new HashMap<>();
+    
+    private DataColumnSpec[] generateColumns(QueryResult query) {
+    	List<List<Object>> columns = query.getResults().get(0).getSeries().get(0).getValues();
+    	
+    	DataColumnSpec[] allColSpecs = new DataColumnSpec[columns.size()];
+    	
+    	for (int i = 0; i < columns.size(); i++) {
+    		String name = (String)columns.get(i).get(0);
+    		DataType type = getDataTypeForString ((String)columns.get(i).get(1));
+    		
+    		columnMap.put(name, i);
+    		allColSpecs[i] = new DataColumnSpecCreator(name, type).createSpec();
+    	}
+    	
+    	return allColSpecs;
+    }
 
+    private DataType getDataTypeForString(String typename) {
+		if (typename.equals("string")) {
+			return StringCell.TYPE;
+		} 
+		
+		return DoubleCell.TYPE;
+	}
+
+//	private DataType getDataTypeForObject (Object obj) {
+//    	if (obj == null) {
+//    		return StringCell.TYPE;
+//    	} else if (obj.getClass() == String.class) {
+//    		return StringCell.TYPE;
+//    	} else if (obj.getClass() == Double.class) {
+//    		return DoubleCell.TYPE;
+//    	}
+//    	
+//    	return null;
+//    }
+    
+    private DataCell getDataCellForObject (Object obj) {
+    	if (obj == null) {
+    		return new StringCell("");
+    	} else if (obj.getClass() == String.class) {
+    		return new StringCell((String) obj);
+    	} else if (obj.getClass() == Double.class) {
+    		return new DoubleCell((double) obj);
+    	}
+    	
+    	return new StringCell("");
+    }
+    
     /**
      * {@inheritDoc}
      */
