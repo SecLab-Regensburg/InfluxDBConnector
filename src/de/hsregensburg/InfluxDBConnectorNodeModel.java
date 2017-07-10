@@ -205,6 +205,8 @@ public class InfluxDBConnectorNodeModel extends NodeModel {
 	}
 
 	private void initTypeMap(QueryResult query) {
+		typeForField.clear();
+		
 		List<List<Object>> columns = query.getResults().get(0).getSeries().get(0).getValues();
 
 		for (int i = 0; i < columns.size(); i++) {
@@ -216,10 +218,15 @@ public class InfluxDBConnectorNodeModel extends NodeModel {
 	}
 
 	private void initOrderedTypes(QueryResult query) {
+		orderedTypes.clear();
 		List<String> fields = query.getResults().get(0).getSeries().get(0).getColumns();
 		
 		for (String field : fields) {
-			orderedTypes.add(typeForField.get(field));
+			if (field.equals("time")) {
+				orderedTypes.add("string");
+			} else {
+				orderedTypes.add(typeForField.get(field));
+			}
 		}
 	}
 
