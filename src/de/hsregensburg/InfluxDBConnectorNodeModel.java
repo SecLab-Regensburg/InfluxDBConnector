@@ -62,13 +62,6 @@ public class InfluxDBConnectorNodeModel extends NodeModel {
 	// the logger instance
 	private static final NodeLogger logger = NodeLogger.getLogger(InfluxDBConnectorNodeModel.class);
 
-	/**
-	 * the settings key which is used to retrieve and store the settings (from
-	 * the dialog or from a settings file) (package visibility to be usable from
-	 * the dialog).
-	 */
-	static final String CFGKEY_COUNT = "Count";
-
 	static final String CFGKEY_DATABASE_URI = "URI";
 	static final String CFGKEY_DATABASE_NAME = "Databasename";
 	static final String CFGKEY_DATABASE_USERNAME = "Username";
@@ -132,38 +125,15 @@ public class InfluxDBConnectorNodeModel extends NodeModel {
 
 		int size_columns = series.getColumns().size();
 		int size_rows = series.getValues().size();
-		//
-		// DataColumnSpec[] allColSpecs = new DataColumnSpec[size_columns];
-		//
-		// List<Object> firstRow = series.getValues().get(0);
-		// for (int i = 0; i < size_columns; i++) {
-		// DataType type = getDataTypeForObject(firstRow.get(i));
-		//
-		// allColSpecs[i] = new DataColumnSpecCreator(columns.get(i),
-		// type).createSpec();
-		// }
 
-		// the data table spec of the single output table,
-		// the table will have three columns:
-		// DataColumnSpec[] allColSpecs = new DataColumnSpec[3];
-		// allColSpecs[0] =
-		// new DataColumnSpecCreator("Column 0", StringCell.TYPE).createSpec();
-		// allColSpecs[1] =
-		// new DataColumnSpecCreator("Column 1", DoubleCell.TYPE).createSpec();
-		// allColSpecs[2] =
-		// new DataColumnSpecCreator("Column 2", IntCell.TYPE).createSpec();
 		DataColumnSpec[] allColSpecs = new DataColumnSpec[size_columns];
 		for (int i = 0; i < size_columns; i++) {
 			allColSpecs[i] = new DataColumnSpecCreator(columns.get(i), getDataTypeForString(orderedTypes.get(i))).createSpec();
 		}
 		
 		DataTableSpec outputSpec = new DataTableSpec(allColSpecs);
-		// the execution context will provide us with storage capacity, in this
-		// case a data container to which we will add rows sequentially
-		// Note, this container can also handle arbitrary big data tables, it
-		// will buffer to disc if necessary.
+
 		BufferedDataContainer container = exec.createDataContainer(outputSpec);
-		// let's add m_count rows to it
 
 		for (int i = 0; i < size_rows; i++) {
 			RowKey key = new RowKey("Row " + i);
@@ -179,26 +149,6 @@ public class InfluxDBConnectorNodeModel extends NodeModel {
 			container.addRowToTable(row);
 		}
 
-		// for (int i = 0; i < m_count.getIntValue(); i++) {
-		// RowKey key = new RowKey("Row " + i);
-		// // the cells of the current row, the types of the cells must match
-		// // the column spec (see above)
-		// DataCell[] cells = new DataCell[3];
-		// cells[0] = new StringCell("String_" + i);
-		// cells[1] = new DoubleCell(0.5 * i); Series series =
-		// result.getSeries().get(0);
-//		List<String> columns = series.getColumns();
-
-		// cells[2] = new IntCell(i);
-		// DataRow row = new DefaultRow(key, cells);
-		// container.addRowToTable(row);
-		//
-		// // check if the execution monitor was canceled
-		// exec.checkCanceled();
-		// exec.setProgress(i / (double)m_count.getIntValue(),
-		// "Adding row " + i);
-		// }
-		// once we are done, we close the container and return its table
 		container.close();
 		BufferedDataTable out = container.getTable();
 		return new BufferedDataTable[] { out };
@@ -237,18 +187,6 @@ public class InfluxDBConnectorNodeModel extends NodeModel {
 
 		return DoubleCell.TYPE;
 	}
-
-	// private DataType getDataTypeForObject (Object obj) {
-	// if (obj == null) {
-	// return StringCell.TYPE;
-	// } else if (obj.getClass() == String.class) {
-	// return StringCell.TYPE;
-	// } else if (obj.getClass() == Double.class) {
-	// return DoubleCell.TYPE;
-	// }
-	//
-	// return null;
-	// }
 
 	private DataCell getDataCellForObject(Object obj, String type) {
 		
