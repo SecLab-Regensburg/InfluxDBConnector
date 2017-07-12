@@ -172,10 +172,15 @@ public class InfluxDBConnectorNodeModel extends NodeModel {
 		List<String> fields = query.getResults().get(0).getSeries().get(0).getColumns();
 		
 		for (String field : fields) {
+			String type = typeForField.get(field);
+			if (type == null) {
+				type = "string";
+			}
+			
 			if (field.equals("time")) {
 				orderedTypes.add("string");
 			} else {
-				orderedTypes.add(typeForField.get(field));
+				orderedTypes.add(type);
 			}
 		}
 	}
