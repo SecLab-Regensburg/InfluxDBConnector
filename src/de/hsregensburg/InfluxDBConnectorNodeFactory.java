@@ -42,7 +42,7 @@ public class InfluxDBConnectorNodeFactory
      */
     @Override
     public int getNrNodeViews() {
-        return 1;
+        return 0;
     }
 
     /**
@@ -51,7 +51,7 @@ public class InfluxDBConnectorNodeFactory
     @Override
     public NodeView<InfluxDBConnectorNodeModel> createNodeView(final int viewIndex,
             final InfluxDBConnectorNodeModel nodeModel) {
-        return new InfluxDBConnectorNodeView(nodeModel);
+        return null;
     }
 
     /**
