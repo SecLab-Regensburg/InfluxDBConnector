@@ -35,6 +35,7 @@ import org.knime.core.data.DataColumnSpecCreator;
 import org.knime.core.data.DataRow;
 import org.knime.core.data.DataTableSpec;
 import org.knime.core.data.DataType;
+import org.knime.core.data.MissingCell;
 import org.knime.core.data.RowKey;
 import org.knime.core.data.def.DefaultRow;
 import org.knime.core.data.def.DoubleCell;
@@ -194,6 +195,9 @@ public class InfluxDBConnectorNodeModel extends NodeModel {
 	}
 
 	private DataCell getDataCellForObject(Object obj, String type) {
+		if (obj == null) {
+			return new MissingCell("");
+		}
 		
 		if (type.equals("string")) {
 			return new StringCell((String) obj);
