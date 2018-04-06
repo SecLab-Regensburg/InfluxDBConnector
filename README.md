@@ -20,7 +20,7 @@ our InfluxDB Database and get correct DataTables for further processing.
 
 ## Installation
 
-To use this Plugin you have to download the [released plugin](https://im-seclab.othr.de/git/wug32351/InfluxDBConnector/releases) (a single .jar file)
+To use this Plugin you have to download the [released plugin](https://github.com/SecLab-Regensburg/InfluxDBConnector/releases) (a single .jar file)
  and drop it into the `dropins` directory in your KNIME installation directory.
 
 ![the installation path](data/InfluxDB_installation.png)
